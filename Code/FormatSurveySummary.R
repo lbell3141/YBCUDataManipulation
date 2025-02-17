@@ -83,18 +83,24 @@ conUTMdf <- FullDat%>%
     T ~ UTMZone))%>%
   mutate(UTMZone = as.numeric(UTMZone))
 
-
+#Converting start coords:
 StartLL <- utm2lonlat(conUTMdf$UTMStartX, conUTMdf$UTMStartY, zone = conUTMdf$UTMZone, hemisphere = "N")%>%
   bind_rows()%>%
-  rename(LatStart = latitude,
-         LonStart = longitude)
+  rename(calc_LatStart = latitude,
+         calc_LonStart = longitude)
+#Converting start coords:
 EndLL <- utm2lonlat(conUTMdf$UTMEndX, conUTMdf$UTMEndY, zone = conUTMdf$UTMZone, hemisphere = "N")%>%
   bind_rows()%>%
-  rename(LatEnd = latitude,
-         LonEnd = longitude)
+  rename(calc_LatEnd = latitude,
+         calc_LonEnd = longitude)
+#Combine results
 AllLLs <- bind_cols(StartLL, EndLL)
-
-#forgot to add lat lon to df?
-test <- merge(AllLLs, conUTMdf)
-
-
+#Add UTM-derived lat/long to full dataset
+LLwithDat <- bind_cols(AllLLs, conUTMdf)
+#If NA, supplement the existing lat/long columns with the UTM-derived coords, then remove those extra calculation columns
+YBCU_data <- LLwithDat %>%
+  mutate(LatStart = if_else(is.na(LatStart), calc_LatStart, LatStart),
+         LonStart = if_else(is.na(LonStart), calc_LonStart, LonStart),
+         LatEnd = if_else(is.na(LatEnd), calc_LatEnd, LatEnd),
+         LonEnd = if_else(is.na(LonEnd), calc_LonEnd, LonEnd)) %>%
+  select(-calc_LatStart, -calc_LonStart, -calc_LatEnd, -calc_LonEnd)
