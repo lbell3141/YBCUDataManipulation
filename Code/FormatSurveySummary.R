@@ -2,6 +2,7 @@
 
 #Load necessary packages
 library(dplyr)
+library(oce)
 
 #Define file paths
 PathtoPre2022Data <- "./Data/pre2022data/SurveySummary_14022025.csv"
@@ -73,3 +74,27 @@ FullDat <- bind_rows(OldRenamed, NewRenamed)%>%
          everything())
 
 #Convert UTMs to lat/lon
+conUTMdf <- FullDat%>%
+  mutate(across(c(UTMStartX, UTMStartY, UTMEndX, UTMEndY, UTMZone),
+                ~as.numeric(na_if(.x, ""))))%>%
+  mutate(UTMZone = substr(UTMZone, 1,2))%>%
+  mutate(UTMZone = case_when(
+    is.na(UTMZone) & (rowSums(!is.na(select(., UTMStartX, UTMStartY, UTMEndX, UTMEndY))) > 0) ~ "12",
+    T ~ UTMZone))%>%
+  mutate(UTMZone = as.numeric(UTMZone))
+
+
+StartLL <- utm2lonlat(conUTMdf$UTMStartX, conUTMdf$UTMStartY, zone = conUTMdf$UTMZone, hemisphere = "N")%>%
+  bind_rows()%>%
+  rename(LatStart = latitude,
+         LonStart = longitude)
+EndLL <- utm2lonlat(conUTMdf$UTMEndX, conUTMdf$UTMEndY, zone = conUTMdf$UTMZone, hemisphere = "N")%>%
+  bind_rows()%>%
+  rename(LatEnd = latitude,
+         LonEnd = longitude)
+AllLLs <- bind_cols(StartLL, EndLL)
+
+#forgot to add lat lon to df?
+test <- merge(AllLLs, conUTMdf)
+
+
