@@ -88,7 +88,7 @@ StartLL <- utm2lonlat(conUTMdf$UTMStartX, conUTMdf$UTMStartY, zone = conUTMdf$UT
   bind_rows()%>%
   rename(calc_LatStart = latitude,
          calc_LonStart = longitude)
-#Converting start coords:
+#Converting end coords:
 EndLL <- utm2lonlat(conUTMdf$UTMEndX, conUTMdf$UTMEndY, zone = conUTMdf$UTMZone, hemisphere = "N")%>%
   bind_rows()%>%
   rename(calc_LatEnd = latitude,
