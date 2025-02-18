@@ -60,12 +60,36 @@ FullVisitDat <- bind_rows(OldRenamed, AddSiteNames)%>%
   filter(SiteYrID != "")
 
 #Convert UTMs to lat/long
-#pull zone from summary sheet
-#if a corrected value DNE, use the raw value
-#if a lat/lon values exists, supplement calulates values with this
-#working in separate df for clarity
+#if a lat/lon values exists, supplement calculates values with this
 PosDat <- FullVisitDat%>%
-  select(SiteYrID, UTMDetectionX, UTMDetectionY, UTMCorrectedX, UTMCorrectedY, LatDetection, LonDetection)
+  select(Version, SiteYrID, UTMDetectionX, UTMDetectionY, UTMCorrectedX, UTMCorrectedY, LatDetection, LonDetection)%>%
+  mutate(SiteYrID = as.numeric(SiteYrID))
+PosDat <- PosDat %>%
+  mutate(across(c(UTMDetectionX, UTMDetectionY, UTMCorrectedX, UTMCorrectedY, LatDetection, LonDetection), 
+                ~ as.numeric(.)))
+
 zones <- YBCU_data%>%
-  select(SiteYrID, UTMZone)
-PosDatwZone <- merge(PosDat,zones, by = "SiteYrID")
+  select(Version, SiteYrID, UTMZone)
+PosDatwZone <- left_join(PosDat, zones, by = c("Version", "SiteYrID"))%>%
+  mutate(UTMforConversionX = case_when(!is.na(UTMCorrectedX) ~ UTMCorrectedX,
+                                      is.na(UTMCorrectedX) ~ UTMDetectionX),
+         UTMforConversionY = case_when(!is.na(UTMCorrectedY) ~ UTMCorrectedY,
+                                       is.na(UTMCorrectedY) ~ UTMDetectionY))%>%
+  mutate(UTMZoneConversion = case_when(!is.na(UTMZone) ~ UTMZone,
+                                       is.na(UTMZone)~ 12))
+ConvertedUTM <- utm2lonlat(PosDatwZone$UTMforConversionX, PosDatwZone$UTMforConversionY, zone = PosDatwZone$UTMZoneConversion, hemisphere = "N")%>%
+  bind_rows()%>%
+  rename(calc_Lat = latitude,
+         calc_Lon = longitude)
+PosDatCalc <- bind_cols(PosDatwZone, ConvertedUTM)%>%
+  mutate(Full_Lat = case_when(!is.na(LatDetection)~LatDetection,
+                              is.na(LatDetection)~ calc_Lat),
+         Full_Lon = case_when(!is.na(LonDetection)~LonDetection,
+                              is.na(LonDetection)~ calc_Lon))
+FinalLL <- PosDatCalc%>%
+  select(Full_Lat, Full_Lon)
+DatwLL <- bind_cols(FinalLL, FullVisitDat)
+#clean up code
+#comment code
+#rearrange df
+#save output to folder
