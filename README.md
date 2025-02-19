@@ -28,3 +28,15 @@ Merging/amending 10+ years of yellow-billed cuckoo observations
     field.
 
 Code Folder:
+
+-   FormatSurveySummary.R: for survey summaries entries, combine pre and
+    post 2022 datasets, convert UTMs to lat/lon, format final data
+    frame, and save output as a csv.
+
+-   FormatSurveyVisits.R: for survey visit entries, combine pre and post
+    2022 datasets, add site names to entries, convert UTMs to lat/lon,
+    format final data frame, and save output as a csv.
+
+-   FormatDailyData.R: for field point observations, combine pre and
+    post 2022 datasets, convert UTMs to lat/lon, format final data
+    frame, and save output as a csv.
