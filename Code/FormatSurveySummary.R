@@ -7,6 +7,7 @@ library(oce)
 #Define file paths
 PathtoPre2022Data <- "./Data/pre2022data/SurveySummary_14022025.csv"
 PathtoPost2022Data <- "./Data/post2022data/SurveySummary_14022025.csv"
+PathtoOutput <- "./Data/Outputs/SurveySummary_19022025.csv"
 
 #Load data
 OldDat <- read.csv(PathtoPre2022Data)
@@ -104,3 +105,5 @@ YBCU_data <- LLwithDat %>%
          LatEnd = if_else(is.na(LatEnd), calc_LatEnd, LatEnd),
          LonEnd = if_else(is.na(LonEnd), calc_LonEnd, LonEnd)) %>%
   select(-calc_LatStart, -calc_LonStart, -calc_LatEnd, -calc_LonEnd)
+#save final dataframe to output path
+write.csv(YBCU_data, PathtoOutput, row.names = F)
